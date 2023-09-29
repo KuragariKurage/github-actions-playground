@@ -1,0 +1,38 @@
+name: create release tag
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - production
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues:  write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: get previous tag name
+        id: previous_tag
+        run: |
+          echo "previous_tag=$(gh release view --json tagName -q .tagName)" >> $GITHUB_OUTPUT
+          echo "release_branch_name=$(echo ${{ github.head_ref }} | sed -e 's/[^/]*\///')" >> $GITHUB_OUTPUT
+      - name: generate release tag name
+        id: release_tag
+        run: |
+          if [[ "${{ steps.previous_tag.outputs.release_branch_name }}" == [0-9]*.[0-9]*.0 ]]; then
+            echo "release_tag=v${{ steps.previous_tag.outputs.release_branch_name }}" >> $GITHUB_OUTPUT
+          else if [[ "${{ steps.previous_tag.outputs.previous_tag}}" == "release not found" ]]; then
+            echo "release_tag=v0.0.1" >> $GITHUB_OUTPUT
+          else
+            echo "release_tag=v$(echo ${{ steps.previous_tag.outputs.previous_tag }} | awk -F. '{print $1"."$2"."$3+1}')" >> $GITHUB_OUTPUT
+          fi
+      - name: Create release
+        run: |
+          gh release create ${{ steps.release_tag.outputs.release_tag }}
