@@ -28,7 +28,7 @@ jobs:
         run: |
           if [[ "${{ steps.previous_tag.outputs.release_branch_name }}" == [0-9]*.[0-9]*.0 ]]; then
             echo "release_tag=v${{ steps.previous_tag.outputs.release_branch_name }}" >> $GITHUB_OUTPUT
-          else if [[ "${{ steps.previous_tag.outputs.previous_tag}}" == "release not found" ]]; then
+          elif [[ "${{ steps.previous_tag.outputs.previous_tag}}" == "release not found" ]]; then
             echo "release_tag=v0.0.1" >> $GITHUB_OUTPUT
           else
             echo "release_tag=v$(echo ${{ steps.previous_tag.outputs.previous_tag }} | awk -F. '{print $1"."$2"."$3+1}')" >> $GITHUB_OUTPUT
